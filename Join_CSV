@@ -1,0 +1,74 @@
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkContext._
+import org.apache.spark.SparkConf
+import org.apache.spark.sql._
+import org.apache.spark.sql.{Row, SQLContext}
+import org.apache.spark.sql.types.{StructType, StructField, StringType, IntegerType}
+import org.apache.spark.sql.functions
+
+val sqlc = new org.apache.spark.sql.SQLContext(sc)
+
+val schema = StructType(
+
+List(
+
+StructField("Id",IntegerType,true),
+
+StructField("content_type_id",IntegerType,true),
+
+StructField("object_id",IntegerType,true),
+
+StructField("related_manager",StringType,true),
+
+StructField("related_id",IntegerType,true),
+
+StructField("memo_type",StringType,true),
+
+StructField("created_at",StringType,true),
+
+StructField("schedule_at",StringType,true),
+
+StructField("executed_at",StringType,true),
+
+StructField("status",StringType,true),
+
+StructField("message",StringType,true),
+
+StructField("flow",StringType,true),
+
+StructField("handler_name",StringType,true),
+
+StructField("actor",StringType,true),
+
+StructField("last_modified",StringType,true),
+
+StructField("request_id",IntegerType,true),
+
+StructField("change_data",StringType,true),
+
+StructField("past_request_ids",StringType,true),
+
+StructField("fee_code",StringType,true),
+
+
+StructField("fee_amount",StringType,true)))
+
+
+val fields=StructType(
+
+List(StructField("memo_id",StringType,true),
+
+StructField("handler_name_",StringType,true),
+
+StructField("data",StringType,true),
+
+
+StructField("last_modified_",StringType,true)))
+
+
+val memo_LoadCsvDF = sqlc.read.format("com.databricks.spark.csv").option("delimiter","|").option("header", "false").schema(schema).load(memo_Csv)
+
+
+val memoChangeLoad = sqlc.read.format("com.databricks.spark.csv").option("delimiter","|").option("header", "false").schema(fields).load(memochange)
+
+val files_joinDF = memo_LoadCsvDF.join(memoChangeLoad, memo_LoadCsvDF("Id").equalTo(memoChangeLoad("memo_id")), "inner").selectExpr("Id","content_type_id","object_id","related_manager","related_id","memo_type","created_at","schedule_at","executed_at","status","message","flow","handler_name","actor","last_modified","request_id","change_data","past_request_ids","fee_code","fee_amount","data")
