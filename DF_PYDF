@@ -1,0 +1,93 @@
+In this tutorial we explore Apache Spark (pyspark) & the Pandas library to work with a JSON dataset. So before we begin heres a quicker primer on Apache Spark & JSON:
+
+Apache Spark2
+
+Apache Spark is a unified analytics engine for big data processing, with built-in modules for streaming, SQL, machine learning and graph processing (https://spark.apache.org/, 2019). Simply put, if you want to query, analyse and transform big data quickly then Spark is your go to engine. What's more, if you have used SQL in the past then its super easy to get started with Spark using the Spark SQL module.
+
+JSON
+
+Ah. The dreaded JSON. I still don't fully get it, but i'll do my best to explain. I guess its loved by developers but hated by analysts/data engineers/everyone else on the planet. JSON is a lightweight data-interchange format (http://www.json.org/, 2019). It's particularly important to understand how to work with JSON datasets as more web applications are adopting the use of JSON to quickly and asynchronously load data. JSON has 6 data types, 4 primitive data types (String, Numbers, Booleans and Null) and 2 structured types (Objects and Arrays).
+
+These are the six structural characters:
+
+[ left square bracket - indicating the beginning of an array
+] right square bracket - indicating the end of an array
+{ left curly bracket - indicating the beginning of an object
+} right curly bracket - indicating the end of an object
+: colon - used for a name separator
+, comma - used as a value separator
+So, a JSON object would have the following structure:
+
+object = {key1:value1, key2:value2, ...}
+
+And, a JSON array would have the following structure:
+
+array = [value1, value2, ...]
+
+
+n.b. - We use quotations marks around the start and end of strings in JSON.
+
+Prerequisites
+
+Before we begin with the tutorial, feel free to download the dataset from the following link. You will also need to configure you environment with Apache Spark2, you can follow this tutorial to do so.
+
+Tutorial
+
+First up, we want to load our JSON file into a Spark DataFrame using the read.json function. For regular JSON files set multiline to True. If you want to understand this option a little more, refer to this link.
+
+df = spark.read.json("dataset.json",multiLine=True)
+
+
+Lets double check that its definitely a Spark DataFrame...
+
+type(df)
+
+Out[3]:pyspark.sql.dataframe.DataFrame
+
+Time to understand this JSON file, lets use the printSchema() method.
+
+We can see from the JSON schema that we need to extract the 'fieldname', as this contains the column names we need when we convert our JSON file into a Pandas DataFrame. To do this, we will use the select method on the Spark DataFrame as follows:
+
+columns = df.select("meta.view.columns.fieldName").collect()
+
+print(columns)
+
+Now we have a list of the columns, we need to extract the data from the JSON file. To do this, we will extract data using Spark SQL. Firstly, we will need to create a temporary table, and then we can use some basic SQL commands to extract the data.
+
+#Cache the dataframe
+data ​= df.cache()
+
+df.registerTempTable("data")
+
+#Use basic SQL commands to extract the data from the JSON File
+
+
+data_spark = spark.sql("select meta.view.columns from data")
+
+#Regsiter another temp table
+df.registerTempTable("data_spark")
+
+
+Lets now import Pandas to put this all together. We first convert the Spark DataFrame into a Pandas DataFrame, and then convert it to a Python List. Pandas DataFrame are simply a two-dimensional labeled data structure, similar to DataFrames in R.
+
+We then call the .DataFrame method , and pass through the data & columns parameters as shown below. The DataFrame function can take the following arguments, data, index, columns, dtype & copy.
+
+import pandas as pd
+
+c = spark.sql("select * from data_spark")
+y = pd.DataFrame(c.collect())
+
+
+for x in y[0]:
+    sparkList = []
+    sparkList.append(x)
+    
+
+dataFrame = pd.DataFrame(sparkList[0], columns=columns[0][0])
+
+    
+
+dataFrame
+You should then have a nicely well formatted Pandas DataFrame. There are still some additional tasks we could perform on this dataset, to me the most obvious one would be to use Regular Expressions to clean up the column names.
+
+I know there will be different ways to have done this, so get in touch and let me know what solution you came up with.
