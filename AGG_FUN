@@ -1,0 +1,74 @@
+from pyspark.sql import SparkSession
+
+# May take a little while on a local computer
+spark = SparkSession.builder.appName("groupbyagg").getOrCreate()
+spark
+
+df = spark.read.csv('sales_info.csv', inferSchema=True, header=True)
+
+df.printSchema()
+
+df.describe().show()
+
+# OrderBy
+# Ascending
+df.orderBy("Sales").show()
+
+# this produces the same result
+# df.orderBy(df["Sales"]).show()
+
+# Descending call off the column itself.
+df.orderBy(df["Sales"].desc()).show()
+
+Dataframe Aggregation
+A set of methods for aggregations on a DataFrame:
+
+agg
+avg
+count
+max
+mean
+min
+pivot
+sum
+
+df.groupBy('Company')
+
+df.groupBy('Company').max().show()
+
+df.groupBy('Company').sum().show()
+
+# Sum by Agg
+group_data = df.groupBy("Company")
+group_data.agg({'Sales':'sum'}).show()
+
+# Max by agg
+group_data.agg({'Sales':'max'}).show()
+
+Not all methods need a groupby call, instead you can just call the generalized .agg() method, 
+that will call the aggregate across all rows in the dataframe column specified. It can take in arguments as a single column, 
+or create multiple aggregate calls all at once using dictionary notation.
+
+df.agg({'Sales':'sum'}).show()
+
+"""Group Function"""
+from pyspark.sql.functions import countDistinct, avg, stddev
+
+df.select(avg('Sales')).show()
+
+# Change name of columns with alias
+df.select(countDistinct("Sales").alias("Distinct Sales")).show()
+
+# That is a lot of precision for digits! Let's use the format_number to fix that!
+from pyspark.sql.functions import format_number
+sales_std = df.select(stddev("Sales").alias('std'))
+
+# format_number("col_name",decimal places)
+sales_std.select(format_number('std',2).alias('std_2digits')).show()
+
+# or with this one liner
+df.select(stddev("Sales").alias('std')).select(format_number('std',2).alias('std_2digits')).show()
+
+
+
+
